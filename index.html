@@ -443,6 +443,155 @@
     </style>
 </head>
 <body>
+<!-- Place this block just inside the <body> tag, before the .quiz-container div -->
+<div style="text-align: center; margin-bottom: 20px;">
+    <label for="quizLength" style="color: white; font-size: 1.1em;">Select Quiz Length:</label>
+    <select id="quizLength" onchange="setQuizLength(this.value)" style="padding: 8px 12px; border-radius: 8px; font-size: 1em;">
+        <option value="5">5 Questions</option>
+        <option value="10">10 Questions</option>
+        <option value="20">20 Questions</option>
+        <option value="all">All Questions</option>
+    </select>
+</div>
+
+<script>
+    let fullQuestionSet = [...questions];
+    let quizQuestions = [];
+
+    function setQuizLength(value) {
+        let count = value === 'all' ? fullQuestionSet.length : parseInt(value);
+
+        // Shuffle the questions randomly
+        quizQuestions = [...fullQuestionSet]
+            .sort(() => 0.5 - Math.random())
+            .slice(0, count);
+
+        currentQuestion = 0;
+        score = 0;
+        selectedAnswer = null;
+        answered = false;
+
+        document.getElementById('score').textContent = '0';
+        document.getElementById('total').textContent = quizQuestions.length;
+        document.getElementById('quizComplete').style.display = 'none';
+        document.getElementById('questionContainer').style.display = 'block';
+
+        loadQuestion();
+    }
+
+    // Replace 'questions' with 'quizQuestions' in functions
+    function loadQuestion() {
+        if (currentQuestion >= quizQuestions.length) {
+            showQuizComplete();
+            return;
+        }
+
+        const question = quizQuestions[currentQuestion];
+        const container = document.getElementById('questionContainer');
+
+        container.innerHTML = `
+            <div class="question-card" id="questionCard">
+                <div class="card-front">
+                    <div class="question-number">Question ${currentQuestion + 1} of ${quizQuestions.length}</div>
+                    <div class="question-text">${question.question}</div>
+
+                    <div class="options-container">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectAnswer(${index})">
+                                <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                                <div>${option}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-secondary" onclick="previousQuestion()" ${currentQuestion === 0 ? 'style="visibility: hidden;"' : ''}>
+                            Previous
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-back">
+                    <div class="explanation-card">
+                        <div class="back-question-summary">
+                            <div class="back-question-text">${question.question}</div>
+                            <div class="back-correct-answer">
+                                <strong>Correct Answer:</strong> ${String.fromCharCode(65 + question.correct)}. ${question.options[question.correct]}
+                            </div>
+                        </div>
+
+                        <div class="explanation-title">
+                            <div class="result-indicator" id="resultIndicator">
+                                ✓
+                            </div>
+                            <span id="resultText">Explanation</span>
+                        </div>
+                        <div class="explanation-text">${question.explanation}</div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-secondary" onclick="showFront()">
+                            Back to Question
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="nextQuestion()">
+                                ${currentQuestion === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        updateProgress();
+        selectedAnswer = null;
+        answered = false;
+    }
+
+    function updateProgress() {
+        const progress = (currentQuestion / quizQuestions.length) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    function showQuizComplete() {
+        document.getElementById('questionContainer').style.display = 'none';
+        document.getElementById('quizComplete').style.display = 'block';
+
+        const finalScore = document.getElementById('finalScore');
+        const scoreMessage = document.getElementById('scoreMessage');
+
+        finalScore.textContent = `${score}/${quizQuestions.length}`;
+
+        const percentage = (score / quizQuestions.length) * 100;
+        if (percentage >= 90) {
+            scoreMessage.textContent = "Excellent! You have a strong understanding of newborn and post-partum care.";
+        } else if (percentage >= 70) {
+            scoreMessage.textContent = "Good job! You have a solid foundation in newborn and post-partum care.";
+        } else if (percentage >= 50) {
+            scoreMessage.textContent = "Not bad! Consider reviewing some areas of newborn and post-partum care.";
+        } else {
+            scoreMessage.textContent = "Keep studying! There's room for improvement in your newborn and post-partum care knowledge.";
+        }
+
+        document.getElementById('progressFill').style.width = '100%';
+    }
+
+    function restartQuiz() {
+        setQuizLength(document.getElementById('quizLength').value);
+    }
+
+    // Start with default of 5 questions
+    window.onload = () => setQuizLength('5');
+</script>
+
+
+
+    
     <div class="quiz-container">
         <div class="quiz-header">
             <h1 class="quiz-title">Newborn & Post-Partum Care</h1>
